@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Guru All-in-One v15.1</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1, h2, h3 { color: #2c3e50; text-align: center; margin-top: 15px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-top: -10px; margin-bottom: 30px; }
+        label { font-weight: bold; display: block; margin-top: 20px; margin-bottom: 8px; color: #34495e; }
+        input[type="text"], textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Area Frame Kop Dinas Asli */
+        .box-kop-surat-asli { width: 100%; max-width: 900px; margin: 0 auto 20px auto; display: none; }
+        .kop-surat-file { width: 100%; height: auto; display: block; }
+        
+        .upload-box { border: 2px dashed #0284c7; padding: 20px; text-align: center; background: #f0f9ff; border-radius: 8px; margin-bottom: 25px; }
+        .grid-tombol { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .btn { color: white; padding: 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; transition: background 0.3s; text-align: center; }
+        .btn-siswa { background-color: #27ae60; }
+        .btn-siswa:hover { background-color: #219653; }
+        .btn-guru { background-color: #2980b9; }
+        .btn-guru:hover { background-color: #2471a3; }
+        
+        .instruction { background: #e0f2fe; border-left: 4px solid #0284c7; padding: 15px; border-radius: 4px; color: #0369a1; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        
+        #area-cetak-guru { display: none; margin-top: 40px; border-top: 3px dashed #cbd5e1; padding-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; margin-bottom: 30px; }
+        table, th, td { border: 1px solid #cbd5e1; }
+        th { background-color: #f8fafc; padding: 10px; text-align: left; font-size: 13px; color: #000; font-weight: bold; }
+        td { padding: 10px; vertical-align: top; font-size: 13px; color: #000; }
+        .kunci-ringkas { display: flex; flex-wrap: wrap; gap: 10px; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-weight: bold; }
+        .kunci-item { background: white; padding: 6px 12px; border-radius: 4px; border: 1px solid #cbd5e1; }
+        .detail-soal { background: #fafafa; border-left: 4px solid #2980b9; padding: 12px; margin-bottom: 12px; border-radius: 0 6px 6px 0; color: #000; }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .no-print { display: none !important; }
+            #area-cetak-guru { display: block !important; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="no-print">
+        <div class="box-kop-surat-asli" id="frame-kop-guru">
+            <img class="kop-surat-file" id="img-kop-guru" src="" alt="Kop Resmi">
+        </div>
+        
+        <h1>Dashboard Guru All-in-One v15.1</h1>
+        <p class="subtitle">Satu Kali Input untuk File Siswa (HTML) & Dokumen Guru (PDF)</p>
+        
+        <div class="instruction">
+            <strong>Perbaikan Fitur Cetak Administrasi Guru (v15.1):</strong><br>
+            Masalah tombol cetak ngadat sudah dibersihkan total! Sekarang Anda bisa mengunduh file kuis mandiri siswa sekaligus mencetak lembar Kisi-kisi & Kunci Jawaban ke PDF dengan lancar jaya.
+        </div>
+
+        <div class="upload-box" id="input-logo-box">
+            <strong style="color: #0369a1;">🔑 Langkah Awal: Masukkan Berkas Kop Surat Asli Anda</strong><br>
+            <input type="file" id="pilih-logo-asli" accept="image/*" style="margin-top: 10px;" onchange="simpanLogoKeMemori(this)">
+        </div>
+
+        <label for="judul-tes-input">1. Nama / Judul Tes Online:</label>
+        <input type="text" id="judul-tes-input" placeholder="Contoh: SAT LANDSCAP XI DPIB TAHUN PELAJARAN 2025-2026" required>
+
+        <label for="url-spreadsheet">2. Tautan Web App Google Sheets (URL Apps Script):</label>
+        <input type="text" id="url-spreadsheet" placeholder="https://script.google.com/macros/s/.../exec" required>
+        
+        <label for="kelas_opsi">3. Tentukan Pilihan Kelas Siswa (Dropdown):</label>
+        <textarea id="kelas_opsi" rows="2" placeholder="Tulis daftar kelas dipisahkan tanda koma. Contoh: X DPIB A, XI DPIB B, XII DPIB"></textarea>
+
+        <label for="ai-soal-text">4. Tempel (Paste) Hasil Soal dari Mas AI di Sini:</label>
+        <textarea id="ai-soal-text" rows="10" placeholder="Tempel naskah soal lengkap berformat kunci dari Mas AI di sini..."></textarea>
+        
+        <div class="grid-tombol">
+            <button class="btn btn-siswa" onclick="prosesFileSiswa()">🚀 Buat & Unduh Soal Online Siswa</button>
+            <button class="btn btn-guru" onclick="prosesDokumenGuru()">📊 Cetak Kisi-Kisi & Kunci (PDF)</button>
+        </div>
+    </div>
+
+    <div id="area-cetak-guru">
+        <div class="box-kop-surat-asli" id="frame-kop-cetak" style="display:block;">
+            <img class="kop-surat-file" id="img-kop-cetak" src="" alt="Kop Cetak">
+        </div>
+        <h2 id="print-judul-kisi" style="text-align: center; color: #000;">KISI-KISI PENULISAN SOAL UJIAN</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%; text-align:center;">No</th>
+                    <th style="width: 55%;">Indikator Soal / Konteks Butir Pertanyaan</th>
+                    <th style="width: 15%; text-align:center;">Level Kognitif</th>
+                    <th style="width: 15%; text-align:center;">Bentuk Soal</th>
+                    <th style="width: 10%; text-align:center;">Kunci</th>
+                </tr>
+            </thead>
+            <tbody id="body-tabel-kisi"></tbody>
+        </table>
+
+        <div class="page-break"></div>
+
+        <h2 id="print-judul-kunci" style="text-align: center; margin-top:20px; color: #000;">LEMBAR KUNCI JAWABAN & PEMBAHASAN</h2>
+        <h3 style="color: #000; text-align: left;">A. Kunci Jawaban Ringkas</h3>
+        <div class="kunci-ringkas" id="tempat-kunci-ringkas"></div>
+
+        <h3 style="color: #000; text-align: left;">B. Detail Butir Soal & Kunci Jawaban Resmi</h3>
+        <div id="tempat-kunci-detail"></div>
+    </div>
+</div>
+
+<template id="template-html-siswa">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{JUDUL_TES}}</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; color: #1e293b; }
+        .wrapper { max-width: 820px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 6px solid #1976D2; }
+        h1 { color: #1e3a8a; text-align: center; font-size: 22px; text-transform: uppercase; margin-top: 15px; }
+        p.info { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; }
+        .box-biodata { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        label { font-weight: 600; display: block; margin-top: 12px; font-size: 14px; color: #475569; }
+        .card-soal { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .teks-soal { font-size: 15px; font-weight: 600; margin-bottom: 15px; color: #0f172a; line-height: 1.5; }
+        .opsi-item { display: block; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; margin: 10px 0; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .opsi-item:hover { background: #f1f5f9; }
+        .opsi-item input { margin-right: 12px; }
+        .opsi-item.terpilih { background: #eff6ff; border-color: #bfdbfe; font-weight: 500; }
+        .btn-kirim { background-color: #1976D2; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 20px; }
+        .box-kop-siswa { width: 100%; max-width: 780px; margin: 0 auto 15px auto; display: block; }
+        .kop-surat-siswa { width: 100%; height: auto; display: block; }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="box-kop-siswa">
+        <img class="kop-surat-siswa" src="{{KOP_ASLI_B64}}" alt="Kop Resmi Instansi">
+    </div>
+
+    <h1>{{JUDUL_TES}}</h1>
+    <p class="info">Silakan isi identitas Anda dan pilih salah satu poin jawaban yang paling tepat.</p>
+    <div class="box-biodata">
+        <h3>Identitas Peserta Ujian</h3>
+        <label>Nama Lengkap Siswa:</label>
+        <input type="text" id="nama_siswa" style="width:100%; padding:11px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;" placeholder="Ketik nama lengkap..." required>
+        <label>Kelas / Ruang:</label>
+        <select id="kelas_siswa" style="width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-top: 5px;" required>
+            {{OPTIONS_KELAS}}
+        </select>
+    </div>
+    <form id="form-ujian-siswa"><div id="lembar-soal-place"></div><button type="button" class="btn-kirim" onclick="submitJawabanSiswa()">Kirim Lembar Jawaban</button></form>
+</div>
+<script>
+    const base64Data = "{{DATA_SOAL_BASE64}}";
+    let daftarSoal = JSON.parse(decodeURIComponent(escape(atob(base64Data))));
+    const endpointUrl = "{{URL_SPREADSHEET}}";
+
+    function acakArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    function persiapkanDanAcakSoal() {
+        acakArray(daftarSoal);
+        daftarSoal.forEach(soal => acakArray(soal.opsi));
+        tampilkanSoalKeSiswa();
+    }
+    function tampilkanSoalKeSiswa() {
+        const tempatSoal = document.getElementById('lembar-soal-place'); tempatSoal.innerHTML = "";
+        daftarSoal.forEach((soal, idx) => {
+            let naskahHtml = '<div class="card-soal"><div class="teks-soal">' + (idx + 1) + '. ' + soal.pertanyaan + '</div>';
+            const abjad = ['A', 'B', 'C', 'D', 'E'];
+            soal.opsi.forEach((opsiPil, oIdx) => {
+                let idLabel = "label-" + idx + "-" + oIdx;
+                naskahHtml += '<label class="opsi-item" id="' + idLabel + '"><input type="radio" name="soal-' + idx + '" value="' + opsiPil.replace(/"/g, '&quot;') + '" onchange="tandaiPilihan(' + idx + ',' + oIdx + ')" required> <strong>' + abjad[oIdx] + '.</strong> ' + opsiPil + '</label>';
+            });
+            tempatSoal.innerHTML += naskahHtml + '</div>';
+        });
+    }
+    function tandaiPilihan(soalIdx, opsiIdx) {
+        const semuaOpsiDiSoal = document.getElementsByName("soal-" + soalIdx);
+        semuaOpsiDiSoal.forEach((item, oIdx) => { document.getElementById("label-" + soalIdx + "-" + oIdx).classList.remove("terpilih"); });
+        document.getElementById("label-" + soalIdx + "-" + opsiIdx).classList.add("terpilih");
+    }
+    function submitJawabanSiswa() {
+        const nama = document.getElementById('nama_siswa').value.trim();
+        const kelas = document.getElementById('kelas_siswa').value.trim();
+        if (!nama || !kelas) { alert("⚠️ Nama Lengkap dan Kelas wajib diisi!"); return; }
+        let jumlahBenar = 0; let sudahIsiSemua = true;
+        daftarSoal.forEach((soal, idx) => {
+            const radioTerpilih = document.querySelector('input[name="soal-' + idx + '"]:checked');
+            if (!radioTerpilih) { sudahIsiSemua = false; } else if (radioTerpilih.value === soal.kunci) { jumlahBenar++; }
+        });
+        if (!sudahIsiSemua) { alert("⚠️ Harap jawab semua pertanyaan!"); return; }
+        const nilaiFinal = Math.round((jumlahBenar / daftarSoal.length) * 100);
+        const paketData = new FormData(); paketData.append("nama", nama); paketData.append("kelas", kelas); paketData.append("nilai", nilaiFinal);
+        alert("Menghubungkan ke server database guru...");
+        fetch(endpointUrl, { method: "POST", body: paketData, mode: "no-cors" }).then(() => {
+            alert("🎉 Sukses! Jawaban terkirim.");
+            document.querySelector('.wrapper').innerHTML = '<div style="text-align:center; padding:40px 20px;"><h2>✅ Ujian Selesai!</h2><p>Terima kasih <strong>' + nama + ' (' + kelas + ')</strong>, lembar jawaban Anda telah sukses terekam.</p></div>';
+        }).catch(() => alert("❌ Gagal mengirim jawaban."));
+    }
+    window.onload = persiapkanDanAcakSoal;
+</script>
+</body>
+</html>
+</template>
+
+<script>
+    let globalLogoB64 = "";
+
+    // MEMORI ENGINE: Mengambil aset gambar tersimpan otomatis saat web dibuka
+    window.onload = function() {
+        const logoTersimpan = localStorage.getItem("kop_smkn1_pajangan");
+        if (logoTersimpan) {
+            globalLogoB64 = logoTersimpan;
+            tampilkanLogoKeLayar(logoTersimpan);
+        }
+    }
+
+    function simpanLogoKeMemori(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const hasilDataB64 = e.target.result;
+                try {
+                    localStorage.setItem("kop_smkn1_pajangan", hasilDataB64);
+                    globalLogoB64 = hasilDataB64;
+                    tampilkanLogoKeLayar(hasilDataB64);
+                    alert("🎉 Sukses! Kop Surat Asli Berhasil Dikunci ke Memori Sistem.");
+                } catch (err) {
+                    alert("⚠️ Kapasitas file gambar terlalu besar untuk memori internal browser. Silakan kompres gambar terlebih dahulu!");
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function tampilkanLogoKeLayar(dataB64) {
+        document.getElementById('img-kop-guru').src = dataB64;
+        document.getElementById('img-kop-cetak').src = dataB64;
+        document.getElementById('frame-kop-guru').style.display = "block";
+        document.getElementById('input-logo-box').style.display = "none";
+    }
+
+    function parsingTeksSoalKeJson(teksRaw) {
+        let baris = teksRaw.replace(/[“”]/g, "'").replace(/[‘’]/g, "'").replace(/[\r]/g, "").split('\n');
+        let bankSoal = []; let soalSekarang = null;
+
+        baris.forEach(line => {
+            let cleanLine = line.trim(); if (!cleanLine) return;
+            if (/^(soal|pertanyaan)?\s*\d+[\s.):-]/i.test(cleanLine) || cleanLine.toLowerCase().startsWith('soal')) {
+                if (soalSekarang) bankSoal.push(soalSekarang);
+                let naskahPertanyaan = cleanLine.replace(/^(soal|pertanyaan)?\s*\d+[\s.):-]*/i, '').trim();
+                soalSekarang = { pertanyaan: naskahPertanyaan, opsi: [], kunci: "", kunci_huruf: "A" };
+            }
+            else if (/^[\s*-]*[A-E][\s.)-]/i.test(cleanLine)) {
+                if (soalSekarang) {
+                    let teksOpsi = cleanLine.replace(/^[\s*-]*[A-E][\s.)-]*/i, '').trim();
+                    soalSekarang.opsi.push(teksOpsi);
+                }
+            }
+            else if (cleanLine.toLowerCase().includes('kunci') || cleanLine.toLowerCase().includes('jawaban')) {
+                if (soalSekarang) {
+                    let match = cleanLine.match(/[:\s\*-]([A-E])\b/i);
+                    if (match) soalSekarang.kunci_huruf = match[1].toUpperCase();
+                }
+            }
+        });
+        if (soalSekarang) bankSoal.push(soalSekarang);
+
+        bankSoal.forEach(soal => {
+            let indeks = Array.from("ABCDE").indexOf(soal.kunci_huruf);
+            if (indeks !== -1 && soal.opsi[indeks]) { soal.kunci = soal.opsi[indeks]; }
+            if (!soal.kunci && soal.opsi.length > 0) { soal.kunci = soal.opsi[0]; }
+        });
+        return bankSoal;
+    }
+
+    function prosesFileSiswa() {
+        const judulTes = document.getElementById('judul-tes-input').value.trim() || "Ujian Online Siswa";
+        const urlSpreadsheet = document.getElementById('url-spreadsheet').value.trim();
+        const teksSoalAi = document.getElementById('ai-soal-text').value.trim();
+        const rawKelas = document.getElementById('kelas_opsi').value.trim();
+
+        if (!globalLogoB64) { alert("⚠️ Harap masukkan file Logo Ujian.png terlebih dahulu di kotak atas!"); return; }
+        if (!urlSpreadsheet || !teksSoalAi) { alert("⚠️ Mohon isi Tautan Spreadsheet dan Tempel Soal AI!"); return; }
+        
+        const bankSoal = parsingTeksSoalKeJson(teksSoalAi);
+        if (bankSoal.length === 0 || bankSoal[0].opsi.length === 0) { alert("⚠️ Gagal membaca susunan format soal."); return; }
+
+        let opsiKelasHtml = '<option value="" disabled selected>-- Pilih Kelas Anda --</option>';
+        if (rawKelas) {
+            rawKelas.split(',').forEach(k => { opsiKelasHtml += `<option value="${k.trim()}">${k.trim()}</option>`; });
+        } else {
+            opsiKelasHtml += '<option value="Umum">Umum</option>';
+        }
+
+        const stringJsonSoal = JSON.stringify(bankSoal);
+        const encodedBankSoal = btoa(unescape(encodeURIComponent(stringJsonSoal)));
+        let templateRaw = document.getElementById('template-html-siswa').innerHTML;
+        
+        let htmlSiswaFinal = templateRaw
+            .replace(/{{JUDUL_TES}}/g, judulTes)
+            .replace('{{OPTIONS_KELAS}}', opsiKelasHtml)
+            .replace('{{DATA_SOAL_BASE64}}', encodedBankSoal)
+            .replace('{{URL_SPREADSHEET}}', urlSpreadsheet)
+            .replace('{{KOP_ASLI_B64}}', globalLogoB64);
+
+        const namaFileClean = judulTes.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_siswa.html';
+        const blob = new Blob([htmlSiswaFinal], { type: 'text/html' });
+        const urlDownload = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a'); a.href = urlDownload; a.download = namaFileClean;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        
+        alert("🎉 Berhasil! File kuis '" + namaFileClean + "' resmi terunduh dengan Kop Resmi 100% Asli.");
+    }
+
+    // FUNGSI GURU UTAMA: MEMBUAT KISI-KISI & LEMBAR PRINT PERBAIKAN TOTAL
+    function prosesDokumenGuru() {
+        const judul = document.getElementById('judul-tes-input').value.trim() || "Ujian Sekolah";
+        const teksSoalRaw = document.getElementById('ai-soal-text').value.trim();
+
+        if (!teksSoalRaw) { alert("⚠️ Harap masukkan teks soal dari AI!"); return; }
+        const daftarSoal = parsingTeksSoalKeJson(teksSoalRaw);
+        if (daftarSoal.length === 0) { alert("⚠️ Format soal gagal diproses."); return; }
+
+        document.getElementById('print-judul-kisi').innerText = "KISI-KISI PENULISAN SOAL\n" + judul.toUpperCase();
+        document.getElementById('print-judul-kunci').innerText = "LEMBAR KUNCI JAWABAN GURU\n" + judul.toUpperCase();
+
+        // 1. Isikan tabel kisi-kisi
+        const bodyTabel = document.getElementById('body-tabel-kisi'); bodyTabel.innerHTML = "";
+        daftarSoal.forEach((soal, idx) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td style="text-align:center;">${idx + 1}</td><td><strong>Soal:</strong> ${soal.pertanyaan}</td><td style="text-align:center; color:#555;"><i>L2/L3</i></td><td style="text-align:center;">Pilihan Ganda</td><td style="text-align:center; font-weight:bold; color:#27ae60;">${soal.kunci_huruf}</td>`;
+            bodyTabel.appendChild(tr);
+        });
+
+        // 2. Isikan kunci jawaban ringkas
+        const tempatRingkas = document.getElementById('tempat-kunci-ringkas'); tempatRingkas.innerHTML = "";
+        daftarSoal.forEach((soal, idx) => {
+            let div = document.createElement('div'); div.className = "kunci-item";
+            div.innerHTML = `${idx + 1}. <span style="color:#e74c3c;">${soal.kunci_huruf}</span>`;
+            tempatRingkas.appendChild(div);
+        });
+
+        // 3. Isikan detail pembahasan (PERBAIKAN TYPO DARIPADA S$.KUNCI_HURUF)
+        const tempatDetail = document.getElementById('tempat-kunci-detail'); tempatDetail.innerHTML = "";
+        daftarSoal.forEach((soal, idx) => {
+            let div = document.createElement('div'); div.className = "detail-soal";
+            let opsiHtml = "<ul style='list-style-type: none; padding-left: 10px;'>"; 
+            const abjad = ["A", "B", "C", "D", "E"];
+            
+            soal.opsi.forEach((opsi, oIdx) => {
+                let isKunci = abjad[oIdx] === soal.kunci_huruf;
+                opsiHtml += `<li style="${isKunci ? 'font-weight:bold; color:#27ae60;' : ''}">[${abjad[oIdx]}] ${opsi} ${isKunci ? '✓' : ''}</li>`;
+            });
+            opsiHtml += "</ul>";
+            div.innerHTML = `<strong>Soal No. ${idx + 1}</strong><br><p style='margin: 5px 0;'>${soal.pertanyaan}</p>${opsiHtml}<p style="font-size:12px; color:#555; margin-top:5px;">Kunci Resmi: ${soal.kunci_huruf} (${soal.kunci})</p>`;
+            tempatDetail.appendChild(div);
+        });
+
+        // Tampilkan area cetak dan picu sistem cetak print PDF otomatis komputer
+        document.getElementById('area-cetak-guru').style.display = "block";
+        window.print();
+    }
+</script>
+</body>
+</html>
