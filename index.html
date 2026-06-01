@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Guru All-in-One v15.2 - Paging Mode</title>
+    <title>Dashboard Guru All-in-One v16.0 - Bank Soal Acak</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 950px; margin: auto; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         h1, h2, h3 { color: #2c3e50; text-align: center; margin-top: 15px; }
         p.subtitle { text-align: center; color: #7f8c8d; margin-top: -10px; margin-bottom: 30px; }
         label { font-weight: bold; display: block; margin-top: 20px; margin-bottom: 8px; color: #34495e; }
-        input[type="text"], textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        input[type="text"], input[type="number"], textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         
         /* Area Frame Kop Dinas Asli */
         .box-kop-surat-asli { width: 100%; max-width: 900px; margin: 0 auto 20px auto; display: none; }
@@ -52,12 +52,12 @@
             <img class="kop-surat-file" id="img-kop-guru" src="" alt="Kop Resmi">
         </div>
         
-        <h1>Dashboard Guru All-in-One v15.2</h1>
-        <p class="subtitle">Update: Layout Aplikasi Ujian Siswa (Per Halaman & Indikator Warna)</p>
+        <h1>Dashboard Guru All-in-One v16.0</h1>
+        <p class="subtitle">Update: Penarikan Acak Bank Soal (Random Pick) & Anti-Curang</p>
         
         <div class="instruction">
-            <strong>Perbaikan Fitur Tampilan Siswa (v15.2):</strong><br>
-            File ujian siswa kini dipisah halamannya. Siswa wajib login nama/kelas sebelum masuk, mengerjakan satu per satu soal, serta melihat panel warna (Merah = Belum, Hijau = Sudah).
+            <strong>Fitur Baru (v16.0):</strong><br>
+            Anda bisa memasukkan 100 soal sekaligus dari AI, lalu mengatur aplikasi agar hanya menampilkan 20 soal secara acak ke siswa. Setiap siswa akan mendapatkan kombinasi soal yang berbeda!
         </div>
 
         <div class="upload-box" id="input-logo-box">
@@ -74,12 +74,16 @@
         <label for="kelas_opsi">3. Tentukan Pilihan Kelas Siswa (Dropdown):</label>
         <textarea id="kelas_opsi" rows="2" placeholder="Tulis daftar kelas dipisahkan tanda koma. Contoh: X DPIB A, XI DPIB B, XII DPIB"></textarea>
 
-        <label for="ai-soal-text">4. Tempel (Paste) Hasil Soal dari Mas AI di Sini:</label>
-        <textarea id="ai-soal-text" rows="10" placeholder="Tempel naskah soal lengkap berformat kunci dari Mas AI di sini..."></textarea>
+        <label for="ai-soal-text">4. Tempel (Paste) Seluruh Bank Soal dari Mas AI di Sini (Boleh 50-100 Soal):</label>
+        <textarea id="ai-soal-text" rows="10" placeholder="Tempel naskah bank soal lengkap berformat kunci dari Mas AI di sini..."></textarea>
+        
+        <label for="jumlah-tampil-input">5. Jumlah Soal yang Ingin Ditampilkan ke Siswa:</label>
+        <input type="number" id="jumlah-tampil-input" value="20" min="1" placeholder="Contoh: 20" required>
+        <small style="color:#7f8c8d; display:block; margin-top:-10px; margin-bottom:15px;">*Aplikasi akan menarik soal secara acak sebanyak angka di atas dari total bank soal yang Anda masukkan.</small>
         
         <div class="grid-tombol">
             <button class="btn btn-siswa" onclick="prosesFileSiswa()">🚀 Buat & Unduh Soal Online Siswa</button>
-            <button class="btn btn-guru" onclick="prosesDokumenGuru()">📊 Cetak Kisi-Kisi & Kunci (PDF)</button>
+            <button class="btn btn-guru" onclick="prosesDokumenGuru()">📊 Cetak Seluruh Kisi-Kisi Bank Soal (PDF)</button>
         </div>
     </div>
 
@@ -88,7 +92,7 @@
         <div class="box-kop-surat-asli" id="frame-kop-cetak" style="display:block;">
             <img class="kop-surat-file" id="img-kop-cetak" src="" alt="Kop Cetak">
         </div>
-        <h2 id="print-judul-kisi" style="text-align: center; color: #000;">KISI-KISI PENULISAN SOAL UJIAN</h2>
+        <h2 id="print-judul-kisi" style="text-align: center; color: #000;">KISI-KISI PENULISAN BANK SOAL UJIAN</h2>
         <table>
             <thead>
                 <tr>
@@ -104,7 +108,7 @@
 
         <div class="page-break"></div>
 
-        <h2 id="print-judul-kunci" style="text-align: center; margin-top:20px; color: #000;">LEMBAR KUNCI JAWABAN & PEMBAHASAN</h2>
+        <h2 id="print-judul-kunci" style="text-align: center; margin-top:20px; color: #000;">LEMBAR KUNCI JAWABAN BANK SOAL</h2>
         <h3 style="color: #000; text-align: left;">A. Kunci Jawaban Ringkas</h3>
         <div class="kunci-ringkas" id="tempat-kunci-ringkas"></div>
 
@@ -114,7 +118,7 @@
 </div>
 
 <!-- ============================================== -->
-<!-- TEMPLATE HTML SISWA YANG SUDAH DIMODIFIKASI -->
+<!-- TEMPLATE HTML SISWA -->
 <!-- ============================================== -->
 <template id="template-html-siswa">
 <!DOCTYPE html>
@@ -184,9 +188,9 @@
         <button class="btn-mulai" onclick="mulaiUjian()">Mulai Mengerjakan Ujian &raquo;</button>
     </div>
 
-    <!-- HALAMAN UJIAN (SOAL PER HALAMAN) -->
+    <!-- HALAMAN UJIAN -->
     <div id="halaman-ujian">
-        <div style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:8px;">Peta Soal:</div>
+        <div style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:8px;">Peta Soal (<span id="info-jumlah"></span> Soal):</div>
         <div class="grid-container" id="tempat-grid-soal"></div>
         
         <div id="lembar-soal-place"></div>
@@ -201,11 +205,16 @@
 
 <script>
     const base64Data = "{{DATA_SOAL_BASE64}}";
-    let daftarSoal = JSON.parse(decodeURIComponent(escape(atob(base64Data))));
+    // bankSoalFull berisi 100 soal (jika guru input 100)
+    let bankSoalFull = JSON.parse(decodeURIComponent(escape(atob(base64Data)))); 
     const endpointUrl = "{{URL_SPREADSHEET}}";
+    const limitSoalTampil = {{JUMLAH_TAMPIL_SISTEM}}; // Batas soal yg ditarik (misal 20)
+    
+    // daftarSoal adalah variabel yg akan digunakan siswa saat ujian (setelah dipotong acak)
+    let daftarSoal = [];
     
     let soalAktifIndex = 0;
-    let jawabanSiswa = {}; // Simpan jawaban misal: { 0: "Jakarta", 1: "Bandung" }
+    let jawabanSiswa = {}; 
 
     function acakArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -215,10 +224,19 @@
         return array;
     }
 
-    // Persiapan sebelum tes
+    // Persiapan sebelum tes: Acak seluruh Bank Soal, Potong sesuai Limit, lalu Acak Opsi Pilihan Ganda
     window.onload = function() {
-        acakArray(daftarSoal);
+        // 1. Acak susunan Bank Soal Utama
+        acakArray(bankSoalFull);
+        
+        // 2. Ambil sejumlah N soal sesuai permintaan guru (jika limit > total bank, ambil semua)
+        let jumlahAmbil = Math.min(limitSoalTampil, bankSoalFull.length);
+        daftarSoal = bankSoalFull.slice(0, jumlahAmbil);
+        
+        // 3. Acak opsi A,B,C,D,E pada soal yang terpilih saja
         daftarSoal.forEach(soal => acakArray(soal.opsi));
+        
+        document.getElementById('info-jumlah').innerText = daftarSoal.length;
     };
 
     function mulaiUjian() {
@@ -318,6 +336,7 @@
             if (!konfirmasi) return;
         }
 
+        // Perhitungan nilai menggunakan jumlah soal yang DITAMPILKAN, bukan jumlah bank soal
         const nilaiFinal = Math.round((jumlahBenar / daftarSoal.length) * 100);
         const paketData = new FormData(); 
         paketData.append("nama", nama); 
@@ -416,12 +435,16 @@
         const urlSpreadsheet = document.getElementById('url-spreadsheet').value.trim();
         const teksSoalAi = document.getElementById('ai-soal-text').value.trim();
         const rawKelas = document.getElementById('kelas_opsi').value.trim();
+        const limitTampil = document.getElementById('jumlah-tampil-input').value.trim() || 20;
 
         if (!globalLogoB64) { alert("⚠️ Harap masukkan file Logo Ujian.png terlebih dahulu di kotak atas!"); return; }
         if (!urlSpreadsheet || !teksSoalAi) { alert("⚠️ Mohon isi Tautan Spreadsheet dan Tempel Soal AI!"); return; }
         
         const bankSoal = parsingTeksSoalKeJson(teksSoalAi);
         if (bankSoal.length === 0 || bankSoal[0].opsi.length === 0) { alert("⚠️ Gagal membaca susunan format soal."); return; }
+        if (limitTampil > bankSoal.length) {
+            alert(`⚠️ Catatan: Anda meminta ${limitTampil} soal, namun bank soal hanya berisi ${bankSoal.length} soal. Aplikasi akan menampilkan ${bankSoal.length} soal.`);
+        }
 
         let opsiKelasHtml = '<option value="" disabled selected>-- Pilih Kelas Anda --</option>';
         if (rawKelas) {
@@ -439,7 +462,8 @@
             .replace('{{OPTIONS_KELAS}}', opsiKelasHtml)
             .replace('{{DATA_SOAL_BASE64}}', encodedBankSoal)
             .replace('{{URL_SPREADSHEET}}', urlSpreadsheet)
-            .replace('{{KOP_ASLI_B64}}', globalLogoB64);
+            .replace('{{KOP_ASLI_B64}}', globalLogoB64)
+            .replace('{{JUMLAH_TAMPIL_SISTEM}}', limitTampil);
 
         const namaFileClean = judulTes.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_siswa.html';
         const blob = new Blob([htmlSiswaFinal], { type: 'text/html' });
@@ -448,7 +472,7 @@
         const a = document.createElement('a'); a.href = urlDownload; a.download = namaFileClean;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         
-        alert("🎉 Berhasil! File kuis '" + namaFileClean + "' resmi terunduh dengan mode Paging & Panel Warna.");
+        alert("🎉 Berhasil! File kuis '" + namaFileClean + "' resmi terunduh dengan sistem penarikan Bank Soal Acak.");
     }
 
     // FUNGSI GURU UTAMA: MEMBUAT KISI-KISI & LEMBAR PRINT PERBAIKAN TOTAL
@@ -460,10 +484,10 @@
         const daftarSoal = parsingTeksSoalKeJson(teksSoalRaw);
         if (daftarSoal.length === 0) { alert("⚠️ Format soal gagal diproses."); return; }
 
-        document.getElementById('print-judul-kisi').innerText = "KISI-KISI PENULISAN SOAL\n" + judul.toUpperCase();
-        document.getElementById('print-judul-kunci').innerText = "LEMBAR KUNCI JAWABAN GURU\n" + judul.toUpperCase();
+        document.getElementById('print-judul-kisi').innerText = "KISI-KISI PENULISAN BANK SOAL\n" + judul.toUpperCase() + "\n(Total " + daftarSoal.length + " Soal)";
+        document.getElementById('print-judul-kunci').innerText = "LEMBAR KUNCI JAWABAN BANK SOAL GURU\n" + judul.toUpperCase();
 
-        // 1. Isikan tabel kisi-kisi
+        // 1. Isikan tabel kisi-kisi (Untuk Cetak, Tampilkan Seluruh Bank Soal)
         const bodyTabel = document.getElementById('body-tabel-kisi'); bodyTabel.innerHTML = "";
         daftarSoal.forEach((soal, idx) => {
             let tr = document.createElement('tr');
