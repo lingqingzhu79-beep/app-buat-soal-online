@@ -52,12 +52,13 @@
             <img class="kop-surat-file" id="img-kop-guru" src="" alt="Kop Resmi">
         </div>
         
-        <h1>Dashboard Guru All-in-One v16.0</h1>
+        <h1>Halaman Untuk Buat Soal Online + Kisi-kisi dan Kunci Jawaban</h1>
         <p class="subtitle">Update: Penarikan Acak Bank Soal (Random Pick) & Anti-Curang</p>
         
         <div class="instruction">
             <strong>Fitur Baru (v16.0):</strong><br>
             Anda bisa memasukkan 100 soal sekaligus dari AI, lalu mengatur aplikasi agar hanya menampilkan 20 soal secara acak ke siswa. Setiap siswa akan mendapatkan kombinasi soal yang berbeda!
+	    Ketika Siswa Berbuat Curang Otomatis Soal Akan Reset Menampilkan Soal Baru.
         </div>
 
         <div class="upload-box" id="input-logo-box">
@@ -87,7 +88,6 @@
         </div>
     </div>
 
-    <!-- AREA CETAK GURU -->
     <div id="area-cetak-guru">
         <div class="box-kop-surat-asli" id="frame-kop-cetak" style="display:block;">
             <img class="kop-surat-file" id="img-kop-cetak" src="" alt="Kop Cetak">
@@ -117,9 +117,6 @@
     </div>
 </div>
 
-<!-- ============================================== -->
-<!-- TEMPLATE HTML SISWA -->
-<!-- ============================================== -->
 <template id="template-html-siswa">
 <!DOCTYPE html>
 <html lang="id">
@@ -128,8 +125,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{JUDUL_TES}}</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; color: #1e293b; }
-        .wrapper { max-width: 820px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 6px solid #1976D2; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f8fafc; 
+            margin: 0; 
+            padding: 15px; 
+            color: #1e293b; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .wrapper { max-width: 820px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 6px solid #1976D2; position: relative; z-index: 10; }
         h1 { color: #1e3a8a; text-align: center; font-size: 22px; text-transform: uppercase; margin-top: 15px; }
         p.info { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 14px; }
         
@@ -162,9 +169,32 @@
         .btn-mulai, .btn-kirim { background-color: #1976D2; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 20px; }
         
         #halaman-ujian { display: none; }
+
+        /* Style Watermark Pelindung Layar */
+        .watermark-ujian {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            opacity: 0.06;
+            pointer-events: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5vw;
+            font-weight: bold;
+            color: #ff0000;
+            transform: rotate(-35deg);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
+
+<div class="watermark-ujian" id="watermark-screen"></div>
+
 <div class="wrapper">
     <div class="box-kop-siswa">
         <img class="kop-surat-siswa" src="{{KOP_ASLI_B64}}" alt="Kop Resmi Instansi">
@@ -172,7 +202,6 @@
 
     <h1>{{JUDUL_TES}}</h1>
 
-    <!-- HALAMAN UTAMA (DATA DIRI) -->
     <div id="halaman-utama">
         <p class="info">Silakan lengkapi identitas Anda sebelum memulai ujian.</p>
         <div class="box-biodata">
@@ -188,7 +217,6 @@
         <button class="btn-mulai" onclick="mulaiUjian()">Mulai Mengerjakan Ujian &raquo;</button>
     </div>
 
-    <!-- HALAMAN UJIAN -->
     <div id="halaman-ujian">
         <div style="font-size:13px; font-weight:bold; color:#475569; margin-bottom:8px;">Peta Soal (<span id="info-jumlah"></span> Soal):</div>
         <div class="grid-container" id="tempat-grid-soal"></div>
@@ -199,22 +227,27 @@
             <button class="btn-nav" id="btn-prev" onclick="navigasi(-1)">&laquo; Sebelumnya</button>
             <button class="btn-nav" id="btn-next" onclick="navigasi(1)">Berikutnya &raquo;</button>
         </div>
-        <button class="btn-kirim" id="btn-kirim" style="display: none;" onclick="submitJawabanSiswa()">Kirim Lembar Jawaban</button>
+        <button class="btn-kirim" id="btn-kirim" style="display: none;" onclick="submitJawabanSiswa(false)">Kirim Lembar Jawaban</button>
     </div>
 </div>
 
 <script>
     const base64Data = "{{DATA_SOAL_BASE64}}";
-    // bankSoalFull berisi 100 soal (jika guru input 100)
     let bankSoalFull = JSON.parse(decodeURIComponent(escape(atob(base64Data)))); 
     const endpointUrl = "{{URL_SPREADSHEET}}";
-    const limitSoalTampil = {{JUMLAH_TAMPIL_SISTEM}}; // Batas soal yg ditarik (misal 20)
+    const limitSoalTampil = {{JUMLAH_TAMPIL_SISTEM}}; 
     
-    // daftarSoal adalah variabel yg akan digunakan siswa saat ujian (setelah dipotong acak)
     let daftarSoal = [];
-    
     let soalAktifIndex = 0;
     let jawabanSiswa = {}; 
+    
+    // Variabel Pelacakan Proteksi Aplikasi
+    let ujianAktif = false;
+    let pelacakBisaJalan = false; 
+    let sedangMunculAlert = false; 
+    let jumlahPelanggaran = 0;
+    const batasMaksimalPelanggaran = 3;
+    let waktuPelanggaranTerakhir = 0;
 
     function acakArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -224,19 +257,22 @@
         return array;
     }
 
-    // Persiapan sebelum tes: Acak seluruh Bank Soal, Potong sesuai Limit, lalu Acak Opsi Pilihan Ganda
     window.onload = function() {
-        // 1. Acak susunan Bank Soal Utama
         acakArray(bankSoalFull);
-        
-        // 2. Ambil sejumlah N soal sesuai permintaan guru (jika limit > total bank, ambil semua)
         let jumlahAmbil = Math.min(limitSoalTampil, bankSoalFull.length);
         daftarSoal = bankSoalFull.slice(0, jumlahAmbil);
-        
-        // 3. Acak opsi A,B,C,D,E pada soal yang terpilih saja
         daftarSoal.forEach(soal => acakArray(soal.opsi));
-        
         document.getElementById('info-jumlah').innerText = daftarSoal.length;
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'c' || e.key === 'v' || e.key === 'p') {
+                    e.preventDefault();
+                }
+            }
+        });
     };
 
     function mulaiUjian() {
@@ -248,12 +284,92 @@
             return;
         }
 
-        // Transisi Halaman
+        const wm = document.getElementById('watermark-screen');
+        wm.innerText = nama + " - " + kelas + " - " + nama + " - " + kelas;
+        wm.style.display = "flex";
+        
         document.getElementById('halaman-utama').style.display = 'none';
         document.getElementById('halaman-ujian').style.display = 'block';
         
         tampilkanSoal(0);
+
+        ujianAktif = true;
+
+        // MODIFIKASI: Menggunakan Hash-Hack agar Berfungsi Sempurna di HP secara Offline/Lokal
+        window.location.hash = "pengerjaan-soal";
+        window.addEventListener('hashchange', handleTombolBackHp);
+        window.addEventListener('beforeunload', handleCloseTabHp);
+        
+        setTimeout(function() {
+            pelacakBisaJalan = true;
+        }, 1500);
     }
+
+    // Fungsi Pengunci Tombol Navigasi Back HP Bawaan
+    function handleTombolBackHp() {
+        if (ujianAktif && window.location.hash !== "#pengerjaan-soal") {
+            // Paksa browser HP tetap berada di halaman kuis kustom
+            window.location.hash = "pengerjaan-soal"; 
+            prosesPelanggaranTerdeteksi();
+        }
+    }
+
+    // Fungsi Pengunci Tindakan Menutup Tab Browser HP
+    function handleCloseTabHp(e) {
+        if (ujianAktif) {
+            e.preventDefault();
+            e.returnValue = 'Apakah Anda yakin? Jawaban kuis Anda akan di-reset otomatis.';
+            return e.returnValue;
+        }
+    }
+
+    function prosesPelanggaranTerdeteksi() {
+        if (!ujianAktif || !pelacakBisaJalan || sedangMunculAlert) return;
+        
+        let sekarang = Date.now();
+        if (sekarang - waktuPelanggaranTerakhir < 5000) return;
+        waktuPelanggaranTerakhir = sekarang;
+        
+        sedangMunculAlert = true; 
+        jumlahPelanggaran++;
+        
+        if (jumlahPelanggaran >= batasMaksimalPelanggaran) {
+            alert("🚨 DETEKSI KECURANGAN MAKSIMAL!\n\nAnda telah meninggalkan halaman ujian atau menekan tombol kembali sebanyak 3 kali. Demi keamanan, seluruh lembar jawaban Anda telah DIHAPUS dan kombinasi soal Anda telah DI-RESET serta DIACAK ULANG.\n\nSilakan kerjakan kembali paket soal yang baru ini dari nomor 1!");
+            
+            jawabanSiswa = {}; 
+            
+            acakArray(bankSoalFull);
+            let jumlahAmbil = Math.min(limitSoalTampil, bankSoalFull.length);
+            daftarSoal = bankSoalFull.slice(0, jumlahAmbil);
+            
+            daftarSoal.forEach(soal => acakArray(soal.opsi));
+            
+            soalAktifIndex = 0;
+            jumlahPelanggaran = 0; 
+            sedangMunculAlert = false;
+            
+            tampilkanSoal(0);
+        } else {
+            alert("⚠️ PERINGATAN KE-" + jumlahPelanggaran + " dari " + batasMaksimalPelanggaran + "!\n\nJangan mencoba membuka Google Lens, AI, atau menekan TOMBOL BACK HP. Jika melanggar lagi, seluruh jawaban Anda akan DIHAPUS dan SOAL AKAN DI-RESET OTOMATIS!");
+            setTimeout(function() {
+                sedangMunculAlert = false;
+            }, 1000);
+        }
+    }
+
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+            prosesPelanggaranTerdeteksi();
+        }
+    });
+
+    window.addEventListener("blur", function() {
+        setTimeout(function() {
+            if (document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "SELECT") {
+                prosesPelanggaranTerdeteksi();
+            }
+        }, 250);
+    });
 
     function renderGrid() {
         const grid = document.getElementById('tempat-grid-soal');
@@ -289,8 +405,6 @@
         naskahHtml += '</div>';
         
         tempatSoal.innerHTML = naskahHtml;
-        
-        // Pengaturan Tombol Navigasi
         document.getElementById('btn-prev').style.visibility = (idx === 0) ? 'hidden' : 'visible';
         
         if (idx === daftarSoal.length - 1) {
@@ -306,7 +420,7 @@
 
     function tandaiPilihan(soalIdx, nilaiDipilih) {
         jawabanSiswa[soalIdx] = nilaiDipilih;
-        tampilkanSoal(soalIdx); // render ulang agar highlight & grid update
+        tampilkanSoal(soalIdx);
     }
 
     function navigasi(step) {
@@ -316,7 +430,14 @@
         }
     }
 
-    function submitJawabanSiswa() {
+    function submitJawabanSiswa(forceSubmit = false) {
+        // Bersihkan seluruh event listener anti-back setelah kuis dikirim secara sah
+        window.removeEventListener('hashchange', handleTombolBackHp);
+        window.removeEventListener('beforeunload', handleCloseTabHp);
+        ujianAktif = false;
+        pelacakBisaJalan = false;
+        window.location.hash = ""; 
+
         const nama = document.getElementById('nama_siswa').value.trim();
         const kelas = document.getElementById('kelas_siswa').value.trim();
         
@@ -331,12 +452,18 @@
             }
         });
 
-        if (soalBelumTerjawab.length > 0) {
+        if (soalBelumTerjawab.length > 0 && !forceSubmit) {
             let konfirmasi = confirm(`⚠️ Perhatian! Anda belum menjawab soal nomor: ${soalBelumTerjawab.join(", ")}.\n\nApakah Anda yakin ingin mengirim dan mengakhiri ujian?`);
-            if (!konfirmasi) return;
+            if (!konfirmasi) {
+                ujianAktif = true;
+                pelacakBisaJalan = true;
+                window.location.hash = "pengerjaan-soal";
+                window.addEventListener('hashchange', handleTombolBackHp);
+                window.addEventListener('beforeunload', handleCloseTabHp);
+                return;
+            }
         }
 
-        // Perhitungan nilai menggunakan jumlah soal yang DITAMPILKAN, bukan jumlah bank soal
         const nilaiFinal = Math.round((jumlahBenar / daftarSoal.length) * 100);
         const paketData = new FormData(); 
         paketData.append("nama", nama); 
@@ -347,11 +474,20 @@
         document.getElementById('btn-kirim').disabled = true;
 
         fetch(endpointUrl, { method: "POST", body: paketData, mode: "no-cors" }).then(() => {
-            document.querySelector('.wrapper').innerHTML = '<div style="text-align:center; padding:40px 20px;"><h2>✅ Ujian Selesai!</h2><p>Terima kasih <strong>' + nama + ' (' + kelas + ')</strong>, lembar jawaban Anda telah sukses terekam oleh sistem.</p></div>';
+            document.getElementById('watermark-screen').style.display = "none";
+            
+            let templateSukses = '<div style="text-align:center; padding:40px 20px;"><h2>✅ Ujian Selesai!</h2>';
+            templateSukses += '<p>Terima kasih <strong>' + nama + ' (' + kelas + ')</strong>, lembar jawaban Anda telah sukses terekam oleh sistem.</p></div>';
+            document.querySelector('.wrapper').innerHTML = templateSukses;
         }).catch(() => {
             alert("❌ Gagal mengirim jawaban. Periksa koneksi internet Anda.");
             document.getElementById('btn-kirim').innerText = "Kirim Lembar Jawaban";
             document.getElementById('btn-kirim').disabled = false;
+            ujianAktif = true;
+            pelacakBisaJalan = true;
+            window.location.hash = "pengerjaan-soal";
+            window.addEventListener('hashchange', handleTombolBackHp);
+            window.addEventListener('beforeunload', handleCloseTabHp);
         });
     }
 </script>
@@ -362,7 +498,6 @@
 <script>
     let globalLogoB64 = "";
 
-    // MEMORI ENGINE: Mengambil aset gambar tersimpan otomatis saat web dibuka
     window.onload = function() {
         const logoTersimpan = localStorage.getItem("kop_smkn1_pajangan");
         if (logoTersimpan) {
@@ -475,7 +610,6 @@
         alert("🎉 Berhasil! File kuis '" + namaFileClean + "' resmi terunduh dengan sistem penarikan Bank Soal Acak.");
     }
 
-    // FUNGSI GURU UTAMA: MEMBUAT KISI-KISI & LEMBAR PRINT PERBAIKAN TOTAL
     function prosesDokumenGuru() {
         const judul = document.getElementById('judul-tes-input').value.trim() || "Ujian Sekolah";
         const teksSoalRaw = document.getElementById('ai-soal-text').value.trim();
@@ -487,7 +621,6 @@
         document.getElementById('print-judul-kisi').innerText = "KISI-KISI PENULISAN BANK SOAL\n" + judul.toUpperCase() + "\n(Total " + daftarSoal.length + " Soal)";
         document.getElementById('print-judul-kunci').innerText = "LEMBAR KUNCI JAWABAN BANK SOAL GURU\n" + judul.toUpperCase();
 
-        // 1. Isikan tabel kisi-kisi (Untuk Cetak, Tampilkan Seluruh Bank Soal)
         const bodyTabel = document.getElementById('body-tabel-kisi'); bodyTabel.innerHTML = "";
         daftarSoal.forEach((soal, idx) => {
             let tr = document.createElement('tr');
@@ -495,7 +628,6 @@
             bodyTabel.appendChild(tr);
         });
 
-        // 2. Isikan kunci jawaban ringkas
         const tempatRingkas = document.getElementById('tempat-kunci-ringkas'); tempatRingkas.innerHTML = "";
         daftarSoal.forEach((soal, idx) => {
             let div = document.createElement('div'); div.className = "kunci-item";
@@ -503,7 +635,6 @@
             tempatRingkas.appendChild(div);
         });
 
-        // 3. Isikan detail pembahasan
         const tempatDetail = document.getElementById('tempat-kunci-detail'); tempatDetail.innerHTML = "";
         daftarSoal.forEach((soal, idx) => {
             let div = document.createElement('div'); div.className = "detail-soal";
@@ -511,7 +642,8 @@
             const abjad = ["A", "B", "C", "D", "E"];
             
             soal.opsi.forEach((opsi, oIdx) => {
-                let isKunci = abjad[oIdx] === soal.kunci_huruf;
+                let isKunci = abjad[oIdx] === map / soal.kunci_huruf;
+                isKunci = abjad[oIdx] === soal.kunci_huruf;
                 opsiHtml += `<li style="${isKunci ? 'font-weight:bold; color:#27ae60;' : ''}">[${abjad[oIdx]}] ${opsi} ${isKunci ? '✓' : ''}</li>`;
             });
             opsiHtml += "</ul>";
@@ -519,7 +651,6 @@
             tempatDetail.appendChild(div);
         });
 
-        // Tampilkan area cetak dan picu sistem cetak print PDF otomatis komputer
         document.getElementById('area-cetak-guru').style.display = "block";
         window.print();
     }
