@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Buat Soal Online Plus Kisi-kisi dan Kunci Jawaban</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 950px; margin: auto; background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -56,9 +65,9 @@
         <p class="subtitle">Update: Penarikan Acak Bank Soal (Random Pick) & Anti-Curang</p>
         
         <div class="instruction">
-            <strong>Fitur Baru (v16.0):</strong><br>
-            Anda bisa memasukkan 100 soal sekaligus dari AI, lalu mengatur aplikasi agar hanya menampilkan 20 soal secara acak ke siswa. Setiap siswa akan mendapatkan kombinasi soal yang berbeda!
-	    Ketika Siswa Berbuat Curang Otomatis Soal Akan Reset Menampilkan Soal Baru.
+            <strong>Fitur Baru (v18.0):</strong><br>
+            - Performa respons ketukan jawaban siswa dipercepat (Bebas Lag 0ms) berkat sistem pembaruan status komponen instan.<br>
+            - Penambahan papan panduan kode penulisan rumus fisika/matematika di bagian bawah area input naskah soal.
         </div>
 
         <div class="upload-box" id="input-logo-box">
@@ -77,6 +86,53 @@
 
         <label for="ai-soal-text">4. Tempel (Paste) Seluruh Bank Soal dari Mas AI di Sini (Boleh 50-100 Soal):</label>
         <textarea id="ai-soal-text" rows="10" placeholder="Tempel naskah bank soal lengkap berformat kunci dari Mas AI di sini..."></textarea>
+        
+        <div style="margin-top: -10px; margin-bottom: 25px;">
+            <input type="file" id="pilih-gambar-soal" accept="image/*" style="display: none;" onchange="sisipkanGambarKeTeksSoal(this)">
+            <button type="button" class="btn" style="background-color: #e67e22; padding: 10px 20px; font-size: 13px;" onclick="document.getElementById('pilih-gambar-soal').click()">🖼️ Sisipkan Gambar ke Soal (Sesuai Kursor)</button>
+            <small style="color:#7f8c8d; display:inline-block; margin-left:10px;">*Letakkan kursor ketikan di naskah soal tempat gambar ingin muncul, lalu klik tombol.</small>
+        </div>
+
+        <div style="background: #fff9db; border-left: 4px solid #f59f00; padding: 18px; border-radius: 6px; color: #664d03; font-size: 13px; margin-bottom: 25px; line-height: 1.6;">
+            <strong>💡 Papan Contoh Penulisan Rumus & Simbol Sains (MathJax/LaTeX):</strong><br>
+            Apit simbol dengan satu tanda dollar <code>$ ... $</code> agar menyatu di dalam baris kalimat, atau gunakan dua tanda dollar <code>$$ ... $$</code> agar rumus berdiri sendiri di baris baru yang rapi.
+            <table style="width:100%; margin-top: 10px; background: white;">
+                <thead>
+                    <tr style="background: #f1f3f5;">
+                        <th style="width: 25%;">Kategori Simbol</th>
+                        <th style="width: 45%;">Cara Tulis di Kotak Soal</th>
+                        <th style="width: 30%;">Tampilan Terjemahan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Pangkat & Sub-indeks</b></td>
+                        <td>Kecepatan: <code>$v = 10 \text{ m/s}^2$</code><br>Energi: <code>$E_k = 200 \text{ J}$</code></td>
+                        <td>$v = 10 \text{ m/s}^2$<br>$E_k = 200 \text{ J}$</td>
+                    </tr>
+                    <tr>
+                        <td><b>Pecahan Bersusun</b></td>
+                        <td>Gaya: <code>$P = \frac{F}{A}$</code><br>Pecahan Angka: <code>$\frac{1}{2}$</code></td>
+                        <td>$P = \frac{F}{A}$<br>$\frac{1}{2}$</td>
+                    </tr>
+                    <tr>
+                        <td><b>Akar Kuadrat</b></td>
+                        <td>Kecepatan Lepas: <code>$v = \sqrt{2 \cdot g \cdot h}$</code></td>
+                        <td>$v = \sqrt{2 \cdot g \cdot h}$</td>
+                    </tr>
+                    <tr>
+                        <td><b>Abjad Yunani Dasar</b></td>
+                        <td>Massa jenis: <code>$\rho$</code>, Ohm: <code>$\Omega$</code>, Gelombang: <code>$\lambda$</code>, Mikro: <code>$\mu$</code></td>
+                        <td>$\rho$, $\Omega$, $\lambda$, $\mu$</td>
+                    </tr>
+                    <tr>
+                        <td><b>Perkalian & Derajat</b></td>
+                        <td>Notasi Sains: <code>$2 \cdot 10^5$</code> atau <code>$3 \times 10^{-2}$</code><br>Suhu: <code>$100^\circ C$</code></td>
+                        <td>$2 \cdot 10^5$ atau $3 \times 10^{-2}$<br>$100^\circ C$</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         
         <label for="jumlah-tampil-input">5. Jumlah Soal yang Ingin Ditampilkan ke Siswa:</label>
         <input type="number" id="jumlah-tampil-input" value="20" min="1" placeholder="Contoh: 20" required>
@@ -124,6 +180,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{JUDUL_TES}}</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -151,7 +216,7 @@
         .card-soal { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
         .teks-soal { font-size: 15px; font-weight: 600; margin-bottom: 15px; color: #0f172a; line-height: 1.5; }
         
-        .opsi-item { display: block; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; margin: 10px 0; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .opsi-item { display: block; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; margin: 10px 0; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.1s; }
         .opsi-item:hover { background: #f1f5f9; }
         .opsi-item input { margin-right: 12px; }
         .opsi-item.terpilih { background: #eff6ff; border-color: #bfdbfe; font-weight: 500; }
@@ -241,7 +306,6 @@
     let soalAktifIndex = 0;
     let jawabanSiswa = {}; 
     
-    // Variabel Pelacakan Proteksi Aplikasi
     let ujianAktif = false;
     let pelacakBisaJalan = false; 
     let sedangMunculAlert = false; 
@@ -292,10 +356,8 @@
         document.getElementById('halaman-ujian').style.display = 'block';
         
         tampilkanSoal(0);
-
         ujianAktif = true;
 
-        // MODIFIKASI: Menggunakan Hash-Hack agar Berfungsi Sempurna di HP secara Offline/Lokal
         window.location.hash = "pengerjaan-soal";
         window.addEventListener('hashchange', handleTombolBackHp);
         window.addEventListener('beforeunload', handleCloseTabHp);
@@ -305,16 +367,13 @@
         }, 1500);
     }
 
-    // Fungsi Pengunci Tombol Navigasi Back HP Bawaan
     function handleTombolBackHp() {
         if (ujianAktif && window.location.hash !== "#pengerjaan-soal") {
-            // Paksa browser HP tetap berada di halaman kuis kustom
             window.location.hash = "pengerjaan-soal"; 
             prosesPelanggaranTerdeteksi();
         }
     }
 
-    // Fungsi Pengunci Tindakan Menutup Tab Browser HP
     function handleCloseTabHp(e) {
         if (ujianAktif) {
             e.preventDefault();
@@ -337,11 +396,9 @@
             alert("🚨 DETEKSI KECURANGAN MAKSIMAL!\n\nAnda telah meninggalkan halaman ujian atau menekan tombol kembali sebanyak 3 kali. Demi keamanan, seluruh lembar jawaban Anda telah DIHAPUS dan kombinasi soal Anda telah DI-RESET serta DIACAK ULANG.\n\nSilakan kerjakan kembali paket soal yang baru ini dari nomor 1!");
             
             jawabanSiswa = {}; 
-            
             acakArray(bankSoalFull);
             let jumlahAmbil = Math.min(limitSoalTampil, bankSoalFull.length);
             daftarSoal = bankSoalFull.slice(0, jumlahAmbil);
-            
             daftarSoal.forEach(soal => acakArray(soal.opsi));
             
             soalAktifIndex = 0;
@@ -398,7 +455,7 @@
             let idLabel = "label-" + idx + "-" + oIdx;
             
             naskahHtml += `<label class="opsi-item ${terpilihClass}" id="${idLabel}">
-                <input type="radio" name="soal-${idx}" value="${nilaiOpsi}" onchange="tandaiPilihan(${idx}, '${nilaiOpsi}')" ${isChecked}> 
+                <input type="radio" name="soal-${idx}" value="${nilaiOpsi}" onchange="tandaiPilihan(${idx}, '${nilaiOpsi}', '${idLabel}')" ${isChecked}> 
                 <strong>${abjad[oIdx]}.</strong> ${opsiPil}
             </label>`;
         });
@@ -416,11 +473,32 @@
         }
         
         renderGrid();
+
+        /* Hanya render ulang simbol saat pindah nomor soal saja */
+        if (window.MathJax && typeof MathJax.typeset === 'function') {
+            MathJax.typeset();
+        }
     }
 
-    function tandaiPilihan(soalIdx, nilaiDipilih) {
+    /* FITUR UNGGULAN: Sistem Penanda Jawaban Instan Tanpa Lag (Anti Freeze HP Siswa) */
+    function tandaiPilihan(soalIdx, nilaiDipilih, labelId) {
         jawabanSiswa[soalIdx] = nilaiDipilih;
-        tampilkanSoal(soalIdx);
+        
+        // Ambil elemen pembungkus pilihan di halaman tanpa memuat ulang innerHTML
+        const card = document.querySelector('.card-soal');
+        if (card) {
+            const labels = card.querySelectorAll('.opsi-item');
+            labels.forEach(lbl => lbl.classList.remove('terpilih'));
+        }
+        
+        // Tambahkan efek warna biru terpilih langsung ke komponen label terkait
+        const labelTerpilih = document.getElementById(labelId);
+        if (labelTerpilih) {
+            labelTerpilih.classList.add('terpilih');
+        }
+        
+        // Perbarui peta warna grid atas kuis
+        renderGrid();
     }
 
     function navigasi(step) {
@@ -431,7 +509,6 @@
     }
 
     function submitJawabanSiswa(forceSubmit = false) {
-        // Bersihkan seluruh event listener anti-back setelah kuis dikirim secara sah
         window.removeEventListener('hashchange', handleTombolBackHp);
         window.removeEventListener('beforeunload', handleCloseTabHp);
         ujianAktif = false;
@@ -531,6 +608,30 @@
         document.getElementById('input-logo-box').style.display = "none";
     }
 
+    function sisipkanGambarKeTeksSoal(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Gambar = e.target.result;
+                const textarea = document.getElementById('ai-soal-text');
+                
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                const teksAwal = textarea.value;
+                
+                const tagImgHtml = `\n<img src="${base64Gambar}" style="max-width:100%; max-height:260px; display:block; margin:10px 0; border:1px solid #cbd5e1; border-radius:6px;">\n`;
+                
+                textarea.value = teksAwal.substring(0, startPos) + tagImgHtml + teksAwal.substring(endPos, teksAwal.length);
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = startPos + tagImgHtml.length;
+                
+                input.value = ""; 
+                alert("🎉 Gambar berhasil ditanamkan ke dalam teks soal!");
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     function parsingTeksSoalKeJson(teksRaw) {
         let baris = teksRaw.replace(/[“”]/g, "'").replace(/[‘’]/g, "'").replace(/[\r]/g, "").split('\n');
         let bankSoal = []; let soalSekarang = null;
@@ -552,6 +653,11 @@
                 if (soalSekarang) {
                     let match = cleanLine.match(/[:\s\*-]([A-E])\b/i);
                     if (match) soalSekarang.kunci_huruf = match[1].toUpperCase();
+                }
+            }
+            else {
+                if (soalSekarang) {
+                    soalSekarang.pertanyaan += "<br>" + cleanLine;
                 }
             }
         });
@@ -642,8 +748,7 @@
             const abjad = ["A", "B", "C", "D", "E"];
             
             soal.opsi.forEach((opsi, oIdx) => {
-                let isKunci = abjad[oIdx] === map / soal.kunci_huruf;
-                isKunci = abjad[oIdx] === soal.kunci_huruf;
+                let isKunci = abjad[oIdx] === soal.kunci_huruf;
                 opsiHtml += `<li style="${isKunci ? 'font-weight:bold; color:#27ae60;' : ''}">[${abjad[oIdx]}] ${opsi} ${isKunci ? '✓' : ''}</li>`;
             });
             opsiHtml += "</ul>";
@@ -652,7 +757,14 @@
         });
 
         document.getElementById('area-cetak-guru').style.display = "block";
-        window.print();
+        
+        if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+            MathJax.typesetPromise().then(() => {
+                window.print();
+            });
+        } else {
+            window.print();
+        }
     }
 </script>
 </body>
