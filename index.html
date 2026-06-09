@@ -402,21 +402,71 @@
     }
 
     function prosesPelanggaranTerdeteksi() {
-        if (!ujianAktif || !pelacakBisaJalan || sedangMunculAlert) return;
-        let sekarang = Date.now();
-        if (sekarang - waktuPelanggaranTerakhir < 5000) return;
-        waktuPelanggaranTerakhir = sekarang;
+    if (!ujianAktif || !pelacakBisaJalan || sedangMunculAlert) return;
+    let sekarang = Date.now();
+    if (sekarang - waktuPelanggaranTerakhir < 5000) return;
+    waktuPelanggaranTerakhir = sekarang;
+    
+    sedangMunculAlert = true; 
+    jumlahPelanggaran++;
+    
+    if (jumlahPelanggaran >= batasMaksimalPelanggaran) {
+        // Beri peringatan tegas ke siswa
+        alert("🚨 DETEKSI KECURANGAN MAKSIMAL!\n\nSistem mendeteksi Anda terus membuka aplikasi lain/AI.\n\nSesuai konsekuensi, seluruh jawaban Anda DIHAPUS, soal diacak ulang, dan Anda wajib mengulang dari Nomor 1!");
         
-        sedangMunculAlert = true; jumlahPelanggaran++;
+        // --- PROSES RESET INSTAN TANPA REFRESH HALAMAN ---
+        jawabanSiswa = {};          // 1. Hapus semua jawaban yang sudah diisi
+        jumlahPelanggaran = 0;      // 2. Reset ulang hitungan pelanggaran ke 0
+        waktuPelanggaranTerakhir = 0;
         
-        if (jumlahPelanggaran >= batasMaksimalPelanggaran) {
-            alert("🚨 DETEKSI KECURANGAN MAKSIMAL!\n\nSeluruh lembar jawaban Anda telah DIHAPUS dan kombinasi soal Anda telah DI-RESET serta DIACAK ULANG.\n\nSilakan kerjakan kembali dari nomor 1!");
-            location.reload();
-        } else {
-            alert("⚠️ PERINGATAN KE-" + jumlahPelanggaran + "!\n\nJangan mencoba keluar aplikasi. Jika melanggar lagi, kuis otomatis di-reset!");
-            setTimeout(() => { sedangMunculAlert = false; }, 1000);
+        // 3. Ambil ulang bank soal asli dan acak kembali secara adil (Fair Shuffle Mixer)
+        let totalTarget = limitSoalTampil;
+        let poolKlaster = bankSoalPerMapel.map(p => ({ mapel: p.mapel, soal: [...p.soal] }));
+        poolKlaster.forEach(p => acakArray(p.soal));
+
+        let soalTerpilihKomposit = [];
+        let jatahPerMapel = Math.floor(totalTarget / poolKlaster.length);
+        let sisaJatahGlobal = totalTarget % poolKlaster.length;
+        let daftarKuota = poolKlaster.map((p, idx) => jatahPerMapel + (idx < sisaJatahGlobal ? 1 : 0));
+
+        let kekuranganKuotaTotal = 0;
+        poolKlaster.forEach((p, idx) => {
+            let kuota = daftarKuota[idx];
+            let diambil = p.soal.splice(0, Math.min(kuota, p.soal.length));
+            diambil.forEach(s => s.mapel_asal = p.mapel);
+            soalTerpilihKomposit = soalTerpilihKomposit.concat(diambil);
+            if (diambil.length < kuota) kekuranganKuotaTotal += (kuota - diambil.length);
+        });
+
+        while (kekuranganKuotaTotal > 0) {
+            let adaInjeksiSoal = false;
+            for (let p of poolKlaster) {
+                if (p.soal.length > 0 && kekuranganKuotaTotal > 0) {
+                    let s = p.soal.shift();
+                    s.mapel_asal = p.mapel;
+                    soalTerpilihKomposit.push(s);
+                    kekuranganKuotaTotal--;
+                    adaInjeksiSoal = true;
+                }
+            }
+            if (!adaInjeksiSoal) break; 
         }
+
+        // Kocok ulang hasil akhir dan acak opsi pilihan ganda
+        acakArray(soalTerpilihKomposit);
+        daftarSoal = soalTerpilihKomposit;
+        daftarSoal.forEach(soal => acakArray(soal.opsi));
+
+        // 4. Kembalikan siswa paksa ke soal nomor 1 dengan wajah soal baru
+        tampilkanSoal(0);
+        
+        // Lepas status alert agar pelacak aktif kembali
+        sedangMunculAlert = false;
+    } else {
+        alert("⚠️ PERINGATAN KE-" + jumlahPelanggaran + "!\n\nJangan mencoba keluar aplikasi. Jika melanggar lagi, kuis otomatis di-reset!");
+        setTimeout(() => { sedangMunculAlert = false; }, 1000);
     }
+}
 
     document.addEventListener("visibilitychange", function() { if (document.hidden) prosesPelanggaranTerdeteksi(); });
 
